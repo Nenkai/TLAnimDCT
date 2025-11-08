@@ -158,7 +158,7 @@ public class CAnimationAlgorithmBase
         }
 
         float factor = (float)(iIndex + iAlpha) / (float)iNumPartSample;
-        oBRValue = Vector4.Lerp(min_, max_, factor);
+        oBRValue = result + Vector4.Lerp(min_, max_, result);
     }
 
 
