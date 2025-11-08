@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -98,13 +99,13 @@ public class CAnimationAlgorithmBase
         short numPartFieldSize = 0;
         ushort numParts = 1;
 
-        float iBRBaseAll = BitConverter.ToSingle(iValueData, 0);
-        uint currentOffset = sizeof(float);
+        float iBRBaseAll = BinaryPrimitives.ReadSingleBigEndian(iValueData.AsSpan()[(int)iValueIndex..]);
+        uint currentOffset = iValueIndex + sizeof(float);
 
         if (leap == ECurveFormatFlag.CURVE_FORMAT_DCT4_LONG)
         {
             numPartFieldSize = sizeof(ushort);
-            numParts = BitConverter.ToUInt16(iValueData, (int)currentOffset);
+            numParts = BinaryPrimitives.ReverseEndianness(BitConverter.ToUInt16(iValueData, (int)currentOffset));
         }
 
         int offsetToParts = (int)currentOffset + numPartFieldSize;
@@ -122,7 +123,7 @@ public class CAnimationAlgorithmBase
 
         if (partIndex > 0)
         {
-            ushort count = BitConverter.ToUInt16(iValueData, (int)(offsetToParts + (partIndex * sizeof(ushort))));
+            ushort count = BinaryPrimitives.ReverseEndianness(BitConverter.ToUInt16(iValueData, (int)(offsetToParts + (partIndex * sizeof(ushort)))));
             currentOffset += count;
         }
 
@@ -161,8 +162,8 @@ public class CAnimationAlgorithmBase
         }
         else
         {
-            TL_BRVec4C.BRVec4LoadS16(out min_, iValueData, (uint)(offsetToVectorBaseTable + (sizeof(float) * (iDim * partIndex))));
-            TL_BRVec4C.BRVec4LoadS16(out max_, iValueData, (uint)(offsetToVectorBaseTable + (sizeof(float) * (iDim * (partIndex + 1)))));
+            TL_BRVec4C.BRVec4Load(out min_, iValueData, (uint)(offsetToVectorBaseTable + (sizeof(float) * (iDim * partIndex))));
+            TL_BRVec4C.BRVec4Load(out max_, iValueData, (uint)(offsetToVectorBaseTable + (sizeof(float) * (iDim * (partIndex + 1)))));
         }
 
         float factor = (float)(iIndex + iAlpha) / (float)iNumPartSample;
@@ -189,12 +190,13 @@ public class CAnimationAlgorithmBase
             return;
         }
 
+        long currentOffset = iPartIndex;
         for (int axis = 0; axis < iDim; axis++)
         {
             // SCompDCTHeader (2 + 2 + 1 + 1 + 1 + 1) - 8 bytes
-            float mBase1 = (float)(BitConverter.ToUInt16(iPartData, (int)iPartIndex + 0) / (float)ushort.MaxValue) * iBRBaseAll;
-            float mBase2 = (float)(BitConverter.ToUInt16(iPartData, (int)iPartIndex + 2) / (float)ushort.MaxValue) * iBRBaseAll;
-            float mBase3 = mBase1 * mBase2 * (iPartData[iPartIndex + 4] / (float)byte.MaxValue); // 255.0
+            float mBase1 = (float)(BinaryPrimitives.ReverseEndianness(BitConverter.ToUInt16(iPartData, (int)currentOffset + 0)) / (float)ushort.MaxValue) * iBRBaseAll;
+            float mBase2 = (float)(BinaryPrimitives.ReverseEndianness(BitConverter.ToUInt16(iPartData, (int)currentOffset + 2)) / (float)ushort.MaxValue) * iBRBaseAll;
+            float mBase3 = (iPartData[iPartIndex + 4] / (float)byte.MaxValue) * mBase2 * mBase1; // 255.0
 
             uint mNum16_8 = iPartData[iPartIndex + 5];
             uint mNum4_0 = iPartData[iPartIndex + 6];
@@ -215,7 +217,7 @@ public class CAnimationAlgorithmBase
             var dctSubTbl = sDCTTable[dctIndex - 1];
             int dctSubIndex = (int)(4 * (iIndex - 1) * dctIndex);
 
-            long currentOffset = iPartIndex + 8; // size of header
+            currentOffset += 8; // size of header
             float axisValue = 0.0f;
 
             for (int i = 0; i < mNumS16Vectors; i++)
