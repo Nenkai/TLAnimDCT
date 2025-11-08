@@ -22,6 +22,12 @@ public class CAnimationAlgorithmBase
 
     static void InitializeStatic()
     {
+        MakeDCTTable();
+    }
+
+    // TL::AnimationFast::CAnimationAlgorithmBase::MakeDCTTable
+    private static void MakeDCTTable()
+    {
         sDCTTable = new float[8][];
         for (int i = 0; i < 8; i++)
         {
@@ -40,6 +46,7 @@ public class CAnimationAlgorithmBase
         }
     }
 
+    // TL::AnimationFast::CAnimationAlgorithmBase::CalcLinear
     public static void CalcLinear(ref Vector4 retValue, ref CAnimationData.SCurve iCurve, byte[] iValueData, uint iValueIndex, uint iKeyIndex, float iAlpha, uint iNumKey)
     {
         uint iDim = iCurve.mCurveFormatFlag >> (int)ECurveFormatFlag.CURVE_FORMAT_DIM_SHIFT;
@@ -81,6 +88,7 @@ public class CAnimationAlgorithmBase
     /// <param name="iKeyIndex">Key index.</param>
     /// <param name="iAlpha">Interpolation factor, the value normally between 0.0 and 1.0</param>
     /// <param name="iNumKey">Num key in the curve?</param>
+    // TL::AnimationFast::CAnimationAlgorithmBase::CalcDCT
     public static void CalcDCT(ref Vector4 oBRValue, ref CAnimationData.SCurve iCurve, byte[] iValueData, uint iValueIndex, uint iKeyIndex, float iAlpha, uint iNumKey)
     {
         uint iDim = iCurve.mCurveFormatFlag >> (int)ECurveFormatFlag.CURVE_FORMAT_DIM_SHIFT;
@@ -110,7 +118,7 @@ public class CAnimationAlgorithmBase
         currentOffset = (uint)(offsetToVectorBaseTable + vectorBaseTableSize);
 
         uint partIndex = iKeyIndex / DCT_PART_SIZE;
-        uint iIndex = iKeyIndex - DCT_PART_SIZE * ((iKeyIndex / DCT_PART_SIZE) & 0x1FFFFFFF);
+        uint iIndex = iKeyIndex % DCT_PART_SIZE;
 
         if (partIndex > 0)
         {
@@ -158,7 +166,7 @@ public class CAnimationAlgorithmBase
         }
 
         float factor = (float)(iIndex + iAlpha) / (float)iNumPartSample;
-        oBRValue = result + Vector4.Lerp(min_, max_, result);
+        oBRValue = result + Vector4.Lerp(min_, max_, factor);
     }
 
 
@@ -172,6 +180,7 @@ public class CAnimationAlgorithmBase
     /// <param name="iIndex"></param>
     /// <param name="iDim">Number of dimensions/axis</param>
     /// <param name="iNumPartSample"></param>
+    // TL::AnimationFast::CAnimationAlgorithmBaseVirtual::ExtractDCT
     public static void ExtractDCT(ref Vector4 oBRRet, float iBRBaseAll, byte[] iPartData, uint iPartIndex, uint iIndex, uint iDim, uint iNumPartSample)
     {
         if (iIndex == 0 || iIndex == iNumPartSample)
