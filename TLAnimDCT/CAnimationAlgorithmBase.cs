@@ -196,11 +196,11 @@ public class CAnimationAlgorithmBase
             // SCompDCTHeader (2 + 2 + 1 + 1 + 1 + 1) - 8 bytes
             float mBase1 = (float)(BinaryPrimitives.ReverseEndianness(BitConverter.ToUInt16(iPartData, (int)currentOffset + 0)) / (float)ushort.MaxValue) * iBRBaseAll;
             float mBase2 = (float)(BinaryPrimitives.ReverseEndianness(BitConverter.ToUInt16(iPartData, (int)currentOffset + 2)) / (float)ushort.MaxValue) * iBRBaseAll;
-            float mBase3 = (iPartData[iPartIndex + 4] / (float)byte.MaxValue) * mBase2 * mBase1; // 255.0
+            float mBase3 = (iPartData[currentOffset + 4] / (float)byte.MaxValue) * mBase2 * mBase1; // 255.0
 
-            uint mNum16_8 = iPartData[iPartIndex + 5];
-            uint mNum4_0 = iPartData[iPartIndex + 6];
-            uint mNumBase1_2 = iPartData[iPartIndex + 7];
+            uint mNum16_8 = iPartData[currentOffset + 5];
+            uint mNum4_0 = iPartData[currentOffset + 6];
+            uint mNumBase1_2 = iPartData[currentOffset + 7];
 
             uint mNumS16Vectors = mNum16_8 >> 4;
             uint mNumS8Vectors = mNum16_8 & 0b1111;
