@@ -19,7 +19,7 @@ internal class Program
         Vector4 outt = new Vector4();
         var curve = new CAnimationData.SCurve();
         curve.mCurveFormatFlag = 0x3309;
-        CAnimationAlgorithmBase.CalcDCT(ref outt, ref curve, filee, 0x2E84, 10, 0.0f, 35); 
+        CAnimationAlgorithmBase.CalcDCT(ref outt, ref curve, filee, 0x3644, 35, 0.0f, 66); 
     }
 }
 

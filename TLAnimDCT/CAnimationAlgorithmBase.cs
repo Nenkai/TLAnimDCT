@@ -12,6 +12,9 @@ namespace TLAnimDCT;
 
 public class CAnimationAlgorithmBase
 {
+    /// <summary>
+    /// Num keys a dct entry can hold (?)
+    /// </summary>
     private const uint DCT_PART_SIZE = 33U;
 
     private static float[][] sDCTTable; // Initialized at CAnimationBase::InitializeStatic
@@ -123,8 +126,10 @@ public class CAnimationAlgorithmBase
 
         if (partIndex > 0)
         {
-            ushort count = BinaryPrimitives.ReverseEndianness(BitConverter.ToUInt16(iValueData, (int)(offsetToParts + (partIndex * sizeof(ushort)))));
-            currentOffset += count;
+            // Seek to table that contains offsets used to skip past dct blocks per 'part'
+            int partCountOffset = (int)(offsetToParts + ((partIndex - 1) * sizeof(ushort)));
+            ushort intCount = BinaryPrimitives.ReverseEndianness(BitConverter.ToUInt16(iValueData, partCountOffset));
+            currentOffset += (uint)(intCount * sizeof(int));
         }
 
         int iNumPartSample = (int)DCT_PART_SIZE;
