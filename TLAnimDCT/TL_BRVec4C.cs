@@ -20,12 +20,10 @@ public class TL_BRVec4C
     public static void BRVec4LoadS16(out Vector4 oResult, byte[] iSource, uint index = 0U)
     {
         // (short*)&iSource[index]
-        Span<short> ushorts = MemoryMarshal.Cast<byte, short>(iSource.AsSpan()[(int)index..]);
-
-        oResult.X = BinaryPrimitives.ReverseEndianness(ushorts[0]) / (float)short.MaxValue; // 32767
-        oResult.Y = BinaryPrimitives.ReverseEndianness(ushorts[1]) / (float)short.MaxValue;
-        oResult.Z = BinaryPrimitives.ReverseEndianness(ushorts[2]) / (float)short.MaxValue;
-        oResult.W = BinaryPrimitives.ReverseEndianness(ushorts[3]) / (float)short.MaxValue;
+        oResult.X = EndianUtils.ReadNumber<ushort>(iSource, (int)(index + 0)) / (float)short.MaxValue; // 32767
+        oResult.Y = EndianUtils.ReadNumber<ushort>(iSource, (int)(index + 2)) / (float)short.MaxValue;
+        oResult.Z = EndianUtils.ReadNumber<ushort>(iSource, (int)(index + 4)) / (float)short.MaxValue;
+        oResult.W = EndianUtils.ReadNumber<ushort>(iSource, (int)(index + 6)) / (float)short.MaxValue;
     }
 
     /// <summary>
@@ -39,9 +37,9 @@ public class TL_BRVec4C
         // (float*)&iSource[index]
         //Span<float> floats = MemoryMarshal.Cast<byte, float>(iSource.AsSpan()[(int)index..]);
 
-        oResult.X = BinaryPrimitives.ReadSingleBigEndian(iSource.AsSpan()[((int)index + 0x00)..]);
-        oResult.Y = BinaryPrimitives.ReadSingleBigEndian(iSource.AsSpan()[((int)index + 0x04)..]);
-        oResult.Z = BinaryPrimitives.ReadSingleBigEndian(iSource.AsSpan()[((int)index + 0x08)..]);
-        oResult.W = BinaryPrimitives.ReadSingleBigEndian(iSource.AsSpan()[((int)index + 0x0C)..]);
+        oResult.X = EndianUtils.ReadNumber<ushort>(iSource, (int)(index + 0x00));
+        oResult.Y = EndianUtils.ReadNumber<ushort>(iSource, (int)(index + 0x04));
+        oResult.Z = EndianUtils.ReadNumber<ushort>(iSource, (int)(index + 0x08));
+        oResult.W = EndianUtils.ReadNumber<ushort>(iSource, (int)(index + 0x0C));
     }
 }

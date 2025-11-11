@@ -15,6 +15,7 @@ internal class Program
     static void Main(string[] args)
     {
         byte[] filee = File.ReadAllBytes(@"MTN_CHR_ALV_000_BTL_000.TOANMB");
+        EndianUtils.IsBigEndian = true;
 
         Vector4 outt = new Vector4();
         var curve = new CAnimationData.SCurve();

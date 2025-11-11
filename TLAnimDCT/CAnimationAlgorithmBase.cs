@@ -7,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using static TLAnimDCT.CModelDataEnum;
+using static TLAnimDCT.EndianUtils;
 
 namespace TLAnimDCT;
 
@@ -102,20 +103,20 @@ public class CAnimationAlgorithmBase
         short numPartFieldSize = 0;
         ushort numParts = 1;
 
-        float iBRBaseAll = BinaryPrimitives.ReadSingleBigEndian(iValueData.AsSpan()[(int)iValueIndex..]);
+        float iBRBaseAll = ReadNumber<float>(iValueData, (int)iValueIndex);
         uint currentOffset = iValueIndex + sizeof(float);
 
         if (leap == ECurveFormatFlag.CURVE_FORMAT_DCT4_LONG)
         {
             numPartFieldSize = sizeof(ushort);
-            numParts = BinaryPrimitives.ReverseEndianness(BitConverter.ToUInt16(iValueData, (int)currentOffset));
+            numParts = ReadNumber<ushort>(iValueData, (int)currentOffset);
         }
 
         int offsetToParts = (int)currentOffset + numPartFieldSize;
-        int offsetToVectorBaseTable = CeilingWith(numPartFieldSize - 2 + (2 * numParts), 0x04) + (int)currentOffset;
+        int offsetToVectorBaseTable = Align(offsetToParts + ((numParts - 1) * sizeof(ushort)), 0x04);
         int vectorBaseTableSize;
         if (format == ECurveFormatFlag.CURVE_FORMAT_VALUE_S16)
-            vectorBaseTableSize = CeilingWith((int)iDim * sizeof(ushort) * (numParts + 1), 0x04);
+            vectorBaseTableSize = Align((int)iDim * sizeof(ushort) * (numParts + 1), 0x04);
         else
             vectorBaseTableSize = (int)iDim * sizeof(float) * (numParts + 1); // F32
 
@@ -128,7 +129,7 @@ public class CAnimationAlgorithmBase
         {
             // Seek to table that contains offsets used to skip past dct blocks per 'part'
             int partCountOffset = (int)(offsetToParts + ((partIndex - 1) * sizeof(ushort)));
-            ushort intCount = BinaryPrimitives.ReverseEndianness(BitConverter.ToUInt16(iValueData, partCountOffset));
+            ushort intCount = ReadNumber<ushort>(iValueData, partCountOffset);
             currentOffset += (uint)(intCount * sizeof(int));
         }
 
@@ -199,8 +200,8 @@ public class CAnimationAlgorithmBase
         for (int axis = 0; axis < iDim; axis++)
         {
             // SCompDCTHeader (2 + 2 + 1 + 1 + 1 + 1) - 8 bytes
-            float mBase1 = (float)(BinaryPrimitives.ReverseEndianness(BitConverter.ToUInt16(iPartData, (int)currentOffset + 0)) / (float)ushort.MaxValue) * iBRBaseAll;
-            float mBase2 = (float)(BinaryPrimitives.ReverseEndianness(BitConverter.ToUInt16(iPartData, (int)currentOffset + 2)) / (float)ushort.MaxValue) * iBRBaseAll;
+            float mBase1 = (float)(ReadNumber<ushort>(iPartData, (int)currentOffset + 0) / (float)ushort.MaxValue) * iBRBaseAll;
+            float mBase2 = (float)(ReadNumber<ushort>(iPartData, (int)currentOffset + 2) / (float)ushort.MaxValue) * iBRBaseAll;
             float mBase3 = (iPartData[currentOffset + 4] / (float)byte.MaxValue) * mBase2 * mBase1; // 255.0
 
             uint mNum16_8 = iPartData[currentOffset + 5];
@@ -277,7 +278,7 @@ public class CAnimationAlgorithmBase
     }
 
     // CriWave.CriMana.Detail.RendererResource.CeilingWith
-    static int CeilingWith(int x, int ceilingValue)
+    static int Align(int x, int ceilingValue)
     {
         return -ceilingValue & (x + ceilingValue - 1);
     }
